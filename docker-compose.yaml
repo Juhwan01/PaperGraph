@@ -1,0 +1,67 @@
+# Docker Compose 파일 버전
+version: '3'
+
+services:
+  # ========================================
+  # OpenSearch: 검색/분석 엔진 (벡터 검색 지원)
+  # ========================================
+  opensearch:
+    image: opensearchproject/opensearch:3.3.0  # OpenSearch 이미지 (버전 3.3.0)
+    container_name: opensearch-node             # 컨테이너 이름 (다른 서비스에서 이 이름으로 접근)
+
+    environment:
+      - cluster.name=opensearch-cluster         # 클러스터 이름
+      - node.name=opensearch-node               # 노드 이름
+      - discovery.type=single-node              # 단일 노드 모드 (개발용)
+      - bootstrap.memory_lock=true              # 메모리 스왑 방지 (성능 향상)
+      - "OPENSEARCH_JAVA_OPTS=-Xms4g -Xmx4g"    # JVM 힙 메모리 4GB 할당
+      - "DISABLE_SECURITY_PLUGIN=true"          # 보안 비활성화 (인증 없이 접근)
+      - plugins.ml_commons.only_run_on_ml_node=false  # ML 작업을 일반 노드에서도 실행 가능
+
+    ulimits:
+      memlock:        # 메모리 잠금 제한 (-1 = 무제한)
+        soft: -1
+        hard: -1
+      nofile:         # 최대 파일 열기 개수
+        soft: 65536
+        hard: 65536
+
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data  # 데이터 영속화 (컨테이너 삭제해도 유지)
+
+    ports:
+      - 9200:9200     # REST API (HTTP 요청)
+      - 9600:9600     # 성능 분석기
+
+    networks:
+      - opensearch-net
+
+  # ========================================
+  # OpenSearch Dashboards: 웹 UI (시각화/관리)
+  # ========================================
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:3.3.0
+    container_name: opensearch-dashboards
+
+    ports:
+      - 5601:5601     # 웹 UI 접속 (http://localhost:5601)
+
+    environment:
+      - 'OPENSEARCH_HOSTS=["http://opensearch-node:9200"]'  # OpenSearch 연결 주소
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"           # 보안 비활성화 (로그인 없이 접근)
+
+    networks:
+      - opensearch-net
+
+    depends_on:
+      - opensearch   # opensearch 컨테이너가 먼저 시작된 후 실행
+
+    restart: on-failure   # 실패 시 자동 재시작
+
+# 볼륨: 데이터 저장소 (컨테이너 삭제해도 데이터 유지)
+volumes:
+  opensearch-data:
+
+# 네트워크: 컨테이너 간 통신용 가상 네트워크
+networks:
+  opensearch-net:
