@@ -61,7 +61,12 @@ class WindowManager {
       }
     });
     this.mainWindow.setVisibleOnAllWorkspaces(true);
-    this.mainWindow.setAlwaysOnTop(true, "floating");
+    this.mainWindow.setAlwaysOnTop(true, "screen-saver");
+    this.mainWindow.on("blur", () => {
+      if (this.mainWindow) {
+        this.mainWindow.setAlwaysOnTop(true, "screen-saver");
+      }
+    });
     this.setCircleShape();
     if (VITE_DEV_SERVER_URL) {
       await this.mainWindow.loadURL(VITE_DEV_SERVER_URL);
@@ -107,6 +112,7 @@ class WindowManager {
         height: MODAL_HEIGHT
       });
       this.mainWindow.setResizable(true);
+      this.mainWindow.setAlwaysOnTop(true, "screen-saver");
       this.windowState = "expanded";
     } else {
       this.mainWindow.setBounds({
@@ -116,6 +122,7 @@ class WindowManager {
         height: FLOATING_SIZE
       });
       this.mainWindow.setResizable(false);
+      this.mainWindow.setAlwaysOnTop(true, "screen-saver");
       this.windowState = "floating";
       setTimeout(() => this.setCircleShape(), 50);
     }

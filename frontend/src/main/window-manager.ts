@@ -1,4 +1,4 @@
-import { BrowserWindow, screen, nativeImage } from 'electron'
+import { BrowserWindow, screen } from 'electron'
 import path from 'path'
 
 export type WindowState = 'floating' | 'expanded'
@@ -38,7 +38,15 @@ export class WindowManager {
     })
 
     this.mainWindow.setVisibleOnAllWorkspaces(true)
-    this.mainWindow.setAlwaysOnTop(true, 'floating')
+    // Windows에서는 'screen-saver' 레벨이 가장 높은 우선순위
+    this.mainWindow.setAlwaysOnTop(true, 'screen-saver')
+
+    // 포커스를 잃어도 항상 맨 위에 유지
+    this.mainWindow.on('blur', () => {
+      if (this.mainWindow) {
+        this.mainWindow.setAlwaysOnTop(true, 'screen-saver')
+      }
+    })
 
     // 플로팅 상태에서 원형 마스크 적용
     this.setCircleShape()
@@ -100,6 +108,7 @@ export class WindowManager {
         height: MODAL_HEIGHT,
       })
       this.mainWindow.setResizable(true)
+      this.mainWindow.setAlwaysOnTop(true, 'screen-saver')
       this.windowState = 'expanded'
     } else {
       // 모달 → 플로팅 최소화
@@ -110,6 +119,7 @@ export class WindowManager {
         height: FLOATING_SIZE,
       })
       this.mainWindow.setResizable(false)
+      this.mainWindow.setAlwaysOnTop(true, 'screen-saver')
       this.windowState = 'floating'
 
       // 원형 마스크 다시 적용
