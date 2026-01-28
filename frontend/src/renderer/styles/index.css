@@ -1,0 +1,803 @@
+/* =============================================
+   PaperGraph - Glassmorphism UI (2025 Style)
+   ============================================= */
+
+:root {
+  /* 색상 팔레트 */
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
+  --accent: #f472b6;
+  --accent-light: #f9a8d4;
+
+  /* 배경 그라데이션 */
+  --bg-gradient: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0d0d1f 100%);
+
+  /* 글래스 효과 */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+  /* 텍스트 */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  /* 기타 */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  background: transparent !important;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+}
+
+/* 플로팅 상태일 때 앱 배경 완전 투명 */
+.app--floating {
+  background: transparent !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 모달 상태일 때 */
+.app--expanded {
+  background: transparent;
+}
+
+/* =============================================
+   Floating Button (동그란 버튼)
+   윈도우가 64x64이므로 버튼이 전체를 채움
+   드래그로 이동 가능, 클릭하면 모달 열림
+   ============================================= */
+.floating-button {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: grab;
+  position: relative;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  box-shadow:
+    0 4px 20px rgba(99, 102, 241, 0.4),
+    0 0 40px rgba(99, 102, 241, 0.2);
+  transition: box-shadow var(--transition-normal), transform var(--transition-fast);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.floating-button:hover {
+  box-shadow:
+    0 6px 30px rgba(99, 102, 241, 0.5),
+    0 0 60px rgba(99, 102, 241, 0.3);
+}
+
+.floating-button:active {
+  cursor: grabbing;
+}
+
+.floating-button__icon {
+  position: relative;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  border-radius: 50%;
+  transition: background var(--transition-fast);
+}
+
+.floating-button:hover .floating-button__icon {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.floating-button__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.floating-button__glow {
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    var(--primary-light),
+    transparent,
+    var(--accent-light),
+    transparent
+  );
+  animation: rotate 4s linear infinite;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* =============================================
+   Modal (모달 창)
+   ============================================= */
+.modal {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-gradient);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* 배경 그라데이션 효과 */
+.modal::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at 30% 20%,
+    rgba(99, 102, 241, 0.15) 0%,
+    transparent 50%
+  ),
+  radial-gradient(
+    circle at 70% 80%,
+    rgba(244, 114, 182, 0.1) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+}
+
+/* 모달 헤더 */
+.modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  -webkit-app-region: drag;
+  position: relative;
+  z-index: 10;
+}
+
+.modal__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 16px;
+  background: linear-gradient(135deg, var(--text-primary), var(--primary-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.modal__logo svg {
+  width: 24px;
+  height: 24px;
+  stroke: var(--primary-light);
+}
+
+/* 윈도우 컨트롤 버튼들 */
+.modal__controls {
+  display: flex;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.modal__btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.modal__btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.modal__btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.modal__btn--minimize:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--primary-light);
+}
+
+.modal__btn--close:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* 기존 modal__close 호환용 */
+.modal__close {
+  -webkit-app-region: no-drag;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.modal__close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.modal__close svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* 탭 네비게이션 */
+.modal__tabs {
+  display: flex;
+  padding: 0 20px;
+  gap: 4px;
+  background: var(--glass-bg);
+  position: relative;
+  z-index: 10;
+}
+
+.modal__tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border-bottom: 2px solid transparent;
+}
+
+.modal__tab svg {
+  width: 18px;
+  height: 18px;
+}
+
+.modal__tab:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.modal__tab--active {
+  color: var(--primary-light);
+  border-bottom-color: var(--primary);
+}
+
+/* 모달 컨텐츠 */
+.modal__content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  z-index: 5;
+}
+
+/* =============================================
+   Upload Tab (논문 업로드)
+   ============================================= */
+.upload-tab {
+  height: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+/* 업로드 영역 */
+.upload-zone {
+  border: 2px dashed var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 40px 20px;
+  text-align: center;
+  transition: all var(--transition-normal);
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+}
+
+.upload-zone--active,
+.upload-zone:hover {
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.upload-zone__icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  color: var(--primary-light);
+  opacity: 0.8;
+}
+
+.upload-zone__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.upload-zone__text {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.upload-zone__label {
+  display: inline;
+}
+
+.upload-zone__label span {
+  color: var(--primary-light);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.upload-zone__label span:hover {
+  color: var(--primary);
+}
+
+.upload-zone__hint {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* 파일 목록 */
+.upload-files {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+}
+
+.upload-files__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--glass-border);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.upload-files__btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.upload-files__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.upload-files__list {
+  flex: 1;
+  list-style: none;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+/* 개별 파일 */
+.upload-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.upload-file:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.upload-file__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.upload-file__icon svg {
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
+.upload-file__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-file__name {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upload-file__size {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.upload-file__status {
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-file__remove {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.upload-file__remove:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.upload-file__remove svg {
+  width: 16px;
+  height: 16px;
+}
+
+.upload-file__progress {
+  width: 60px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.upload-file__progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-fast);
+}
+
+.upload-file__check {
+  width: 20px;
+  height: 20px;
+  color: #22c55e;
+}
+
+/* =============================================
+   Chat Tab (AI 채팅)
+   ============================================= */
+.chat-tab {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 메시지 영역 */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* 빈 상태 */
+.chat-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.chat-empty__icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+  color: var(--primary-light);
+  opacity: 0.6;
+}
+
+.chat-empty__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.chat-empty h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--text-primary), var(--primary-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.chat-empty p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.chat-empty__examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.chat-empty__examples button {
+  padding: 8px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.chat-empty__examples button:hover {
+  border-color: var(--primary);
+  color: var(--primary-light);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* 메시지 */
+.chat-message {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  animation: fadeIn var(--transition-normal);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-message--user {
+  flex-direction: row-reverse;
+}
+
+.chat-message__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.chat-message--user .chat-message__avatar {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  border: none;
+}
+
+.chat-message__content {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  line-height: 1.6;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+}
+
+.chat-message--user .chat-message__content {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border: none;
+  color: white;
+}
+
+/* 로딩 애니메이션 */
+.chat-message__loading {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+}
+
+.chat-message__loading span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.chat-message__loading span:nth-child(1) { animation-delay: -0.32s; }
+.chat-message__loading span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 입력창 */
+.chat-input {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--glass-border);
+}
+
+.chat-input textarea {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  min-height: 44px;
+  max-height: 120px;
+  transition: all var(--transition-fast);
+}
+
+.chat-input textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.chat-input textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.chat-input button {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.chat-input button:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+}
+
+.chat-input button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chat-input button svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* 스크롤바 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
